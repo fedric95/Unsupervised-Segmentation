@@ -1,1 +1,0 @@
-python dfc.py --input C:\Users\federico\Documents\CL\Image15_40.tif --use_gpu 0
