@@ -6,6 +6,8 @@ import pytorch_lightning as pl
 
 from useg.kanezaki.dfc.model import Net, CustomLoss
 from useg.kanezaki.dfc.data import Dataset
+import os
+
 
 scribble = False
 nChannel = 100
@@ -17,7 +19,7 @@ visualize = 1
 stepsize_sim = 1.0 # 'step size for similarity loss'
 stepsize_con = 1.0 # 'step size for continuity loss'
 stepsize_scr = 0.5 # 'step size for scribble loss'
-use_gpu = 0
+use_gpu = 1
 
 if bool(use_gpu)==True:
     num_gpus = torch.cuda.device_count()
@@ -32,11 +34,17 @@ else:
     device = 'cpu'
 
 
+
+
+
 scribble_file = None
 if scribble:
     scribble_file = input.replace('.'+input.split('.')[-1],'_scribble.png')
 
-input_files = ['C:/Users/federico/Documents/CL/Image15_40.tif']
+
+input_dir = 'C:/Users/federico/Downloads/tmp/ETCI2021/train/bangladesh_20170606t115613/tiles/vv/'
+input_files = os.listdir(input_dir)
+input_files = [input_dir+file for file in input_files if file.endswith('.png')]
 
 scribble_files = None
 
