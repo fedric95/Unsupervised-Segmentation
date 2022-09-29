@@ -10,6 +10,7 @@ from useg.kanezaki.model import KanezakiNet
 
 
 # CNN model
+# batch_size != None is not supported
 class Net(KanezakiNet):
     def __init__(
         self,

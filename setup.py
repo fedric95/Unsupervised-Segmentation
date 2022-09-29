@@ -3,7 +3,8 @@ import setuptools
 MINIMAL_REQUIREMENTS = [
     'torch',
     'pytorch-lightning',
-    'numpy'
+    'numpy',
+    'skimage'
 ]
 with open("README.md", encoding="UTF-8") as readme_file:
     readme = readme_file.read()

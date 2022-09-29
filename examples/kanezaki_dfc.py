@@ -10,7 +10,7 @@ import os
 
 
 scribble = False
-nChannel = 100
+nChannel = 80
 maxIter = 1000
 minLabels = 3
 lr = 0.1
@@ -42,9 +42,9 @@ if scribble:
     scribble_file = input.replace('.'+input.split('.')[-1],'_scribble.png')
 
 
-input_dir = 'C:/Users/federico/Downloads/tmp/ETCI2021/train/bangladesh_20170606t115613/tiles/vv/'
+input_dir = r'C:/Users/federico/projects/WNet/data/images/CL/'
 input_files = os.listdir(input_dir)
-input_files = [input_dir+file for file in input_files if file.endswith('.png')]
+input_files = [input_dir+file for file in input_files if file.endswith('.png') or file.endswith('.jpg')]
 
 scribble_files = None
 

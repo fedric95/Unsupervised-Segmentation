@@ -9,6 +9,7 @@ import numpy as np
 from useg.kanezaki.model import KanezakiNet
 
 # CNN model
+# batch_size != None is not supported
 class Net(KanezakiNet):
     def __init__(
         self,
@@ -29,7 +30,7 @@ class Net(KanezakiNet):
         return(opt)
 
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx): #batch_size == 1
 
         image = batch['image']
         inds_sim   = batch.get('inds_sim', None)
