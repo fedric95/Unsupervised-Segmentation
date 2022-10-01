@@ -11,15 +11,13 @@ import skimage.io
 import numpy as np
 import os.path
 
-nChannel = 100
-maxIter = 1000
-minLabels = 3
-lr = 0.1
-nConv = 2
+n_clusters = 100
+epochs = 1000
+learning_rate = 0.1
+n_layers = 2
 visualize = 1
 use_gpu = 0
-
-
+transform = lambda x: x/255.0
 
 if bool(use_gpu)==True:
     num_gpus = torch.cuda.device_count()
@@ -33,17 +31,9 @@ else:
     print('Placing the model on CPU..')
     device = 'cpu'
 
-
-
-input_files = [
-    'C:/Users/federico/Documents/CL/Image15_40.tif', 
-    'C:/Users/federico/Documents/CL/Image16_40.tif', 
-    'C:/Users/federico/Documents/CL/Image17_40.tif',
-    'C:/Users/federico/Documents/CL/Image18_40.tif',
-    'C:/Users/federico/Documents/CL/Image19_40.tif',
-    'C:/Users/federico/Documents/CL/Image20_40.tif',
-    'C:/Users/federico/Documents/CL/Image21_40.tif'
-]
+input_dir = r'C:/Users/federico/Documents/CL/'
+input_files = os.listdir(input_dir)
+input_files = [os.path.join(input_dir,file) for file in input_files if file.endswith('.png') or file.endswith('.jpg') or file.endswith('tif')]
 
 label_files = []
 segmentation_directory = 'C:/Users/federico/Documents/SEG/'
@@ -57,20 +47,20 @@ for i in range(len(input_files)):
 
     label_files.append(labels_path)
 
-dataset = Dataset(input_files, label_files=label_files)
+dataset = Dataset(input_files, label_files=label_files, transform=transform)
 
 # train
 in_channels = 1
 model = Net( 
     in_channels = in_channels, 
-    out_channels = nChannel, 
-    n_layers = nConv, 
-    learning_rate=lr
+    out_channels = n_clusters, 
+    n_layers = n_layers, 
+    learning_rate=learning_rate
 )
 
 trainer = pl.Trainer(
     accelerator=device,
     devices=1,
-    max_epochs=maxIter, log_every_n_steps=1
+    max_epochs=epochs, log_every_n_steps=1
 )
-trainer.fit(model, DataLoader(dataset, batch_size = None))
+trainer.fit(model, DataLoader(dataset, batch_size = 2))

@@ -9,17 +9,17 @@ from useg.kanezaki.dfc.data import Dataset
 import os
 
 
-scribble = False
-nChannel = 80
-maxIter = 1000
-minLabels = 3
-lr = 0.1
-nConv = 2
+
+n_clusters = 80
+epochs = 1000
+learning_rate = 0.1
+n_layers = 2
 visualize = 1
 stepsize_sim = 1.0 # 'step size for similarity loss'
 stepsize_con = 1.0 # 'step size for continuity loss'
-stepsize_scr = 0.5 # 'step size for scribble loss'
-use_gpu = 0
+use_gpu = 1
+transform = lambda x: x/255.0
+
 
 if bool(use_gpu)==True:
     num_gpus = torch.cuda.device_count()
@@ -33,37 +33,26 @@ else:
     print('Placing the model on CPU..')
     device = 'cpu'
 
-
-
-
-
-scribble_file = None
-if scribble:
-    scribble_file = input.replace('.'+input.split('.')[-1],'_scribble.png')
-
-
-input_dir = r'C:/Users/federico/projects/WNet/data/images/CL/'
+input_dir = r'C:/Users/federico/Documents/CL/'
 input_files = os.listdir(input_dir)
-input_files = [input_dir+file for file in input_files if file.endswith('.png') or file.endswith('.jpg')]
+input_files = [os.path.join(input_dir,file) for file in input_files if file.endswith('.png') or file.endswith('.jpg') or file.endswith('tif')]
 
-scribble_files = None
-
-dataset = Dataset(input_files, scribble_files)
+dataset = Dataset(input_files, transform=transform)
 
 in_channels = 1
-custom_loss = CustomLoss(stepsize_sim = stepsize_sim, stepsize_con = stepsize_con, stepsize_scr = stepsize_scr, scribble=scribble)
 model = Net( 
     in_channels = in_channels, 
-    out_channels = nChannel, 
-    n_layers = nConv, 
-    loss=custom_loss,
-    learning_rate=lr
+    out_channels = n_clusters, 
+    n_layers = n_layers, 
+    stepsize_sim=stepsize_sim,
+    stepsize_con=stepsize_con,
+    learning_rate=learning_rate
 )
 
 trainer = pl.Trainer(
     accelerator=device,
     devices=1,
-    max_epochs=maxIter, 
+    max_epochs=epochs, 
     log_every_n_steps=1
 )
-trainer.fit(model, DataLoader(dataset, batch_size = None))
+trainer.fit(model, DataLoader(dataset, batch_size = 1))

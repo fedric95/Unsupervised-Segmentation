@@ -4,8 +4,9 @@ import skimage.io
 import matplotlib.pyplot as plt
 class Dataset:
 
-    def __init__(self, input_files):
+    def __init__(self, input_files, transform=None):
         self.input_files = input_files
+        self.transform = transform
     
     def __len__(self):
         return(len(self.input_files))
@@ -16,7 +17,9 @@ class Dataset:
             im = np.expand_dims(im, -1)
         assert len(im.shape)==3, 'Error reading the image'
         
-        im = im.transpose((2, 0, 1)).astype(np.float32)/255.0
+        im = im.transpose((2, 0, 1)).astype(np.float32)
+        if(self.transform is not None):
+            im = self.transform(im)
         out = {}
         out['image'] = torch.tensor(im)
         return(out)

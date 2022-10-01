@@ -106,7 +106,7 @@ class WNet(pl.LightningModule):
         self, 
         in_channels=3, 
         hiddden_dim=64, 
-        out_channels=4,
+        intermediate_channels=4,
         learning_rate_clust = 2e-4,
         learning_rate_recon = 2e-4,
         radius = 5
@@ -116,11 +116,11 @@ class WNet(pl.LightningModule):
         self.automatic_optimization = False
         
         
-        self.encoder=UNet(in_channels=in_channels, hiddden_dim = hiddden_dim, out_channels = out_channels)
-        self.decoder=UNet(in_channels=out_channels, hiddden_dim = hiddden_dim, out_channels = in_channels)
+        self.encoder=UNet(in_channels=in_channels, hiddden_dim = hiddden_dim, out_channels = intermediate_channels)
+        self.decoder=UNet(in_channels=intermediate_channels, hiddden_dim = hiddden_dim, out_channels = in_channels)
 
         self.label_colours = np.random.randint(255,size=(100,3))
-        self.out_channles = out_channels
+        self.intermediate_channels = intermediate_channels
         self.learning_rate_clust=learning_rate_clust        
         self.learning_rate_recon=learning_rate_recon      
 
@@ -136,7 +136,7 @@ class WNet(pl.LightningModule):
         if visualize:
             ignore, target = torch.max( F.softmax(enc.detach(), 1)[0, :, :, :], 0 )
             im_target = target.data.cpu().numpy()
-            im_target_rgb = np.array([self.label_colours[ c % self.out_channles ] for c in im_target])
+            im_target_rgb = np.array([self.label_colours[ c % self.intermediate_channels ] for c in im_target])
             im_target_rgb = im_target_rgb.reshape( [x.shape[-2], x.shape[-1], 3] ).astype( np.uint8 )
             cv2.imwrite( "output.png", im_target_rgb )
 
