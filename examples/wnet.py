@@ -11,7 +11,7 @@ import datetime
 
 from torch.utils.data import DataLoader
 from useg.wnet.model import WNet
-from useg.data import Dataset
+from useg.wnet.data import Dataset
 
 import pytorch_lightning as pl
 

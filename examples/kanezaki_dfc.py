@@ -19,7 +19,7 @@ visualize = 1
 stepsize_sim = 1.0 # 'step size for similarity loss'
 stepsize_con = 1.0 # 'step size for continuity loss'
 stepsize_scr = 0.5 # 'step size for scribble loss'
-use_gpu = 1
+use_gpu = 0
 
 if bool(use_gpu)==True:
     num_gpus = torch.cuda.device_count()
@@ -63,6 +63,7 @@ model = Net(
 trainer = pl.Trainer(
     accelerator=device,
     devices=1,
-    max_epochs=maxIter, log_every_n_steps=1
+    max_epochs=maxIter, 
+    log_every_n_steps=1
 )
 trainer.fit(model, DataLoader(dataset, batch_size = None))
