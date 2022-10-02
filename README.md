@@ -30,4 +30,4 @@ In this repository, in the examples directory, there is an example for each meth
 
 # TO-DO
 
-ISB and DFC only supports batches of size 1
+ISB and DFC supports batch sizes grater than one but the computation is not efficient (it is not vectorized)
