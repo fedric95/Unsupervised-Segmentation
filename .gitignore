@@ -165,3 +165,4 @@ lightning_logs
 *.png
 *.jpg
 *.tif
+logs

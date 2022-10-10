@@ -6,6 +6,7 @@ import pytorch_lightning as pl
 
 from useg.kanezaki.dfc.model import Net, CustomLoss
 from useg.kanezaki.dfc.data import Dataset
+from useg.utils import isimage, getdevice
 import os
 
 
@@ -13,33 +14,25 @@ import os
 n_clusters = 80
 epochs = 1000
 learning_rate = 0.1
+in_channels = 1
 n_layers = 2
-visualize = 1
 stepsize_sim = 1.0 # 'step size for similarity loss'
 stepsize_con = 1.0 # 'step size for continuity loss'
 use_gpu = 1
 transform = lambda x: x/255.0
 
+def transform(out):
+    out['image'] = out['image']/255.0
+    return(out)
 
-if bool(use_gpu)==True:
-    num_gpus = torch.cuda.device_count()
-    if num_gpus == 0:
-        print('No GPUs available. Placing the model on CPU..')
-        device = 'cpu'
-    else:
-        print('Placing the model on GPU..')
-        device = 'gpu'
-else:
-    print('Placing the model on CPU..')
-    device = 'cpu'
+device = getdevice(use_gpu)
 
 input_dir = r'C:/Users/federico/Documents/CL/'
 input_files = os.listdir(input_dir)
-input_files = [os.path.join(input_dir,file) for file in input_files if file.endswith('.png') or file.endswith('.jpg') or file.endswith('tif')]
+input_files = [os.path.join(input_dir,file) for file in input_files if isimage(file)]
 
-dataset = Dataset(input_files, transform=transform)
+dataset = Dataset(input_files, label_files = None, transform=transform)
 
-in_channels = 1
 model = Net( 
     in_channels = in_channels, 
     out_channels = n_clusters, 
