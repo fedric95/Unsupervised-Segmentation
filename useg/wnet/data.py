@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import skimage.io
 import matplotlib.pyplot as plt
+
 class Dataset:
 
     def __init__(
@@ -14,6 +15,7 @@ class Dataset:
             assert len(input_files) == len(label_files), 'The len of input files and label files must be equal'
 
         self.input_files = input_files
+        self.label_files = label_files
         self.transform = transform
     
     def __len__(self):
@@ -34,6 +36,7 @@ class Dataset:
 
         if(self.label_files is not None):
             out['label'] = skimage.io.imread(self.label_files[idx])
+            out['label'] = np.expand_dims(out['label'], 0)
             out['label'] = torch.tensor(out['label'])
 
         if(self.transform is not None):

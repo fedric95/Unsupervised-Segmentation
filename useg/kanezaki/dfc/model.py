@@ -24,9 +24,11 @@ class Net(KanezakiNet):
         learning_rate=2e-4
     ):
         super(Net, self).__init__(in_channels, out_channels, n_layers)
+        self.save_hyperparameters()
+
         self.learning_rate=learning_rate
         self.loss = CustomLoss(stepsize_sim = stepsize_sim, stepsize_con = stepsize_con)
-        self.label_colours = np.random.randint(255,size=(100,3))
+        self.label_colours = np.random.randint(255,size=(out_channels,3))
         
     
     def configure_optimizers(self):
@@ -38,40 +40,28 @@ class Net(KanezakiNet):
         image = batch['image']
 
         output = self(image)
-        output = output.permute(0, 2, 3, 1) #(NxCxHxW)->(NxHxWxC)
-        _, target = torch.max(output.reshape(output.shape[0], output.shape[1]*output.shape[2], output.shape[3]),2)
-
+        _, target = torch.max(output, 1, keepdim=True)  #(NxCxHxW)->(Nx1xHxW)
         loss = self.loss(output = output, target = target)
         
-        self.log(step+'/loss', loss, prog_bar = True)
+        self.log(step+'/loss', loss, prog_bar = True, on_epoch = True)
         self.log(step+'/n_labels', len(np.unique(np.unique(target.cpu().numpy()))), prog_bar=True)
         
-        if('label' in batch.keys()):
-            label = batch['label'].reshape(image.shape[0], image.shape[2]*image.shape[3])
-            aris = [adjusted_rand_score(torch.flatten(label[i]).cpu().numpy(), torch.flatten(target[i]).cpu().numpy()) for i in range(image.shape[0])]
-            im_label = batch['label'][0, 0, :, :].cpu().detach().numpy()
-            im_label = np.array([self.label_colours[ c % self.out_channels ] for c in im_label])/255
 
-            self.log(step+'/ari', np.mean(aris), prog_bar=True)
-            logimage(self.logger, step+'/label', im_label, self.global_step)
-       
-        im_target = np.array([self.label_colours[ c % self.out_channels ] for c in target[0].cpu().numpy()])/255
-        im_target = im_target.reshape([image.shape[2], image.shape[3], 3])
-        im_input = image[0].cpu().numpy().transpose([1,2,0])
+        im_target = target[0, 0, :, :].cpu().detach().numpy()
+        if('label' in batch.keys()):
+            label = batch['label'][0, 0, :, :].cpu().detach().numpy()
+            ari = adjusted_rand_score(label.ravel(), im_target.ravel())
+            self.log(step+'/ari', ari, prog_bar=True, on_epoch = True)
+            logimage(self.logger, step+'/label', label, self.global_step, self.label_colours)
         
+        im_input = image[0, :, :, :].cpu().detach().numpy().transpose([1,2,0])
         for c in range(im_input.shape[-1]):
             im_input[:, :, c] = (im_input[:, :, c]-im_input[:, :, c].min())/(im_input[:, :, c].max()-im_input[:, :, c].min())
 
-        logimage(self.logger, step+'/output', im_target, self.global_step)
+        logimage(self.logger, step+'/output', im_target, self.global_step, self.label_colours)
         logimage(self.logger, step+'/input', im_input, self.global_step)
 
         
-        #import matplotlib.pyplot as plt
-        #fig, axs = plt.subplots(1, 2)
-        #axs[0].imshow(im_input)
-        #axs[1].imshow(im_label, vmin=0, vmax=7)
-        #plt.show()
-
         return(loss)
 
     def training_step(self, batch, batch_idx):
@@ -92,8 +82,10 @@ class CustomLoss(nn.Module):
  
     def forward(self, output, target):
 
-        loss = 0
+        target = target.reshape(target.shape[0], -1)
+        output = output.permute(0, 2, 3, 1) #(NxCxHxW)->(NxHxWxC)
 
+        loss = 0
         for i in range(output.shape[0]):
 
             HPy = output[i][1:, :, :] - output[i][0:-1, :, :]

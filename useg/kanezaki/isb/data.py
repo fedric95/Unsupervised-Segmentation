@@ -41,7 +41,7 @@ class Dataset:
         out['image'] = torch.tensor(im)
 
         out['preseg'] = skimage.io.imread(self.preseg_files[idx])
-        out['preseg']  = np.expand_dims(out['label'], 0)
+        out['preseg']  = np.expand_dims(out['preseg'], 0)
         out['preseg'] = torch.tensor(out['preseg'], dtype=torch.int64)
 
         if(self.label_files is not None):

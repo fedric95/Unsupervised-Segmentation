@@ -6,6 +6,7 @@ import cv2
 import torch.optim as optim
 from useg.wnet.loss import SoftCutLoss
 import pytorch_lightning as pl
+from useg.utils import logimage
 
 class Block(nn.Module):
     def __init__(self, in_filters, out_filters, seperable=True):
@@ -112,7 +113,9 @@ class WNet(pl.LightningModule):
         radius = 5
     ):
         super(WNet, self).__init__()
-          
+        self.save_hyperparameters()
+
+
         self.automatic_optimization = False
         
         
@@ -127,18 +130,11 @@ class WNet(pl.LightningModule):
         self.loss_clust = SoftCutLoss(radius=radius)
         self.loss_recon = torch.nn.MSELoss()
 
+        self.label_colours = np.random.randint(255,size=(intermediate_channels,3))
 
     def forward(self, x, returns='both'):
 
         enc = self.encoder(x)
-        
-        visualize = True
-        if visualize:
-            ignore, target = torch.max( F.softmax(enc.detach(), 1)[0, :, :, :], 0 )
-            im_target = target.data.cpu().numpy()
-            im_target_rgb = np.array([self.label_colours[ c % self.intermediate_channels ] for c in im_target])
-            im_target_rgb = im_target_rgb.reshape( [x.shape[-2], x.shape[-1], 3] ).astype( np.uint8 )
-            cv2.imwrite( "output.png", im_target_rgb )
 
         if returns=='enc':
             return enc
@@ -159,23 +155,48 @@ class WNet(pl.LightningModule):
         optim_clust = optim.SGD(self.parameters(), lr=self.learning_rate_clust, momentum=0.9)
         optim_recon = optim.SGD(self.parameters(), lr=self.learning_rate_recon, momentum=0.9)
         return optim_clust, optim_recon
-        
 
-    def training_step(self, batch, batch_idx):
-        batch = batch['image']
+    def _shared_step(self, batch, batch_idx, step):
+        image = batch['image']
         optim_clust, optim_recon = self.optimizers()
         optim_clust.zero_grad()
-        enc = self(batch, returns='enc')
+        enc = self(image, returns='enc')
         
-        n_cut_loss=self.loss_clust(batch,  F.softmax(enc, 1))
+        n_cut_loss=self.loss_clust(image,  F.softmax(enc, 1))
 
         self.manual_backward(n_cut_loss)
         optim_clust.step()
         optim_clust.zero_grad()
-        dec = self(batch, returns='dec')
-        rec_loss=self.loss_recon(batch, dec)
+        dec = self(image, returns='dec')
+        rec_loss=self.loss_recon(image, dec)
         self.manual_backward(rec_loss)
         optim_recon.step()
 
-        self.log('reconstruction_loss', rec_loss.detach().item(), prog_bar=True)
-        self.log('soft_n_cut_loss', n_cut_loss.detach().item(), prog_bar=True)
+
+        im_input  = image[0].cpu().detach().numpy().transpose([1,2,0])
+        im_output = dec[0].cpu().detach().numpy().transpose([1,2,0])
+
+        for c in range(im_input.shape[-1]):
+            im_input[:, :, c] = (im_input[:, :, c]-im_input[:, :, c].min())/(im_input[:, :, c].max()-im_input[:, :, c].min())
+
+        logimage(self.logger, step+'/input',  im_input,  self.global_step)
+        logimage(self.logger, step+'/output', im_output, self.global_step)
+
+        self.log(step+'/reconstruction_loss', rec_loss.detach().item(), prog_bar=True)
+        self.log(step+'/soft_n_cut_loss', n_cut_loss.detach().item(), prog_bar=True)
+
+
+
+        #visualize = True
+        #if visualize:
+        #    ignore, target = torch.max(F.softmax(enc.detach(), 1)[0, :, :, :], 0)
+        #    im_target = target.data.cpu().numpy()
+        #    im_target_rgb = np.array([self.label_colours[ c % self.intermediate_channels ] for c in im_target])
+        #    im_target_rgb = im_target_rgb.reshape( [x.shape[-2], x.shape[-1], 3] ).astype( np.uint8 )
+        #    cv2.imwrite( "output.png", im_target_rgb )
+    
+    def training_step(self, batch, batch_idx):
+        return(self._shared_step(batch, batch_idx, 'train'))
+
+    def validation_step(self, batch, batch_idx):
+        return(self._shared_step(batch, batch_idx, 'val'))

@@ -1,6 +1,7 @@
 import torch.cuda
 from pytorch_lightning.loggers import NeptuneLogger, TensorBoardLogger
 from neptune.new.types import File
+import numpy as np
 
 def isimage(path):
     return(path.endswith('.png') or path.endswith('.jpg') or path.endswith('tif'))
@@ -19,7 +20,11 @@ def getdevice(use_gpu):
         device = 'cpu'
     return(device)
 
-def logimage(logger, name, image, global_step):
+def logimage(logger, name, image, global_step, label_colours=None):
+
+    if(label_colours is not None):
+        image = np.array([label_colours[c % label_colours.shape[0]] for c in image])/255
+
     if(isinstance(logger, NeptuneLogger)):
         logger.experiment[name].log(File.as_image(image))
     elif(isinstance(logger, TensorBoardLogger)):
