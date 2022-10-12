@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-import cv2
 import torch.optim as optim
 from useg.wnet.loss import SoftCutLoss
 import pytorch_lightning as pl

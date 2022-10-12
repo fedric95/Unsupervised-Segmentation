@@ -22,6 +22,11 @@ Implementation based on: https://aswali.github.io/WNet/
 
 # Install
 
+conda create -n hunan  python=3.7.10
+conda activate hunan
+conda install pytorch==1.11.0 torchvision==0.12.0 cudatoolkit=11.6 -c pytorch
+
+
 pip install https://github.com/fedric95/Unsupervised-Segmentation.git
 
 # Examples

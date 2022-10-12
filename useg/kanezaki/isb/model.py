@@ -4,7 +4,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch
 import pytorch_lightning as pl
-import cv2
 import numpy as np
 from useg.kanezaki.model import KanezakiNet
 from sklearn.metrics.cluster import adjusted_rand_score
