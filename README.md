@@ -22,13 +22,24 @@ Implementation based on: https://aswali.github.io/WNet/
 
 # Install
 
+Creation of the Environment
+```
 conda create -n hunan  python=3.7.10
 conda activate hunan
-conda install pytorch==1.11.0 torchvision==0.12.0 cudatoolkit=11.6 -c pytorch
-
-
-pip install https://github.com/fedric95/Unsupervised-Segmentation.git
-
+conda install pytorch==1.11.0 torchvision==0.12.0 cudatoolkit=11.3 -c pytorch
+```
+Installation of the Unsupervised-Segmentation library in editable mode
+```
+# Download the repository (git/github interface), for example: git clone https://github.com/fedric95/Unsupervised-Segmentation.git
+cd Unsupervised-Segmentation
+pip install -e .
+```
+Download of the Hunan-Baseline repository
+```
+cd ..
+git clone https://github.com/fedric95/Hunan-Baseline.git
+cd Hunan-Baseline
+```
 # Examples
 
 In this repository, in the examples directory, there is an example for each method that has been implemented.

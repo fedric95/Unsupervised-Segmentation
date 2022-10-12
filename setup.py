@@ -6,8 +6,8 @@ MINIMAL_REQUIREMENTS = [
     'torchvision>=0.12.0',
     'pytorch-lightning>=1.5.9',
     'numpy>=1.19.5',
-    'skimage>=0.18.3',
-    'sklearn>=1.0.2',
+    'scikit-image>=0.18.3',
+    'scikit-learn>=1.0.2',
     'tqdm>=4.64.0',
     'neptune-client>=0.14.3'
 ]
